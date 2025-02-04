@@ -165,7 +165,7 @@ async def on_message(message):
         print("triggered")  # Debugging line
 
         row = get_first_row()
-
+        print(row)
         if row:
             # Format the message with the first row's details
             product_id, stock_status, price, url, last_updated, last_notified = row
