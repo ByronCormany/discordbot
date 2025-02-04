@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 intents = discord.Intents.default()  # Make sure the bot can read messages
 intents.messages = True  # Enable the "messages" intent
+intents.message_content = True
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
