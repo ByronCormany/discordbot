@@ -16,6 +16,7 @@ client = discord.Client(intents=intents)
 # Discord channel ID where the messages will be sent
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 
+"""
 @app.route('/update_stock', methods=['POST'])
 def update_stock():
     # Get stock update data from the stock-checking program
@@ -102,8 +103,25 @@ async def get_first(ctx):
 
     # Send the message to the Discord channel
     await ctx.send(message)
+"""
+
+# Set up the Discord bot event
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user}')
+
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        print("author == client")
+        return
+
+    if message.content.lower() == "Hello":
+        print("trying to squeak")
+        await message.channel.send("Squeak")
 
 def run_flask():
+    print("run flask")
     app.run(host='0.0.0.0', port=5000)
 
 # Start the Flask app and the Discord bot
@@ -112,6 +130,6 @@ if __name__ == "__main__":
     # Run Flask API in a separate thread
     flask_thread = Thread(target=run_flask)
     flask_thread.start()
-
+    print("main")
     # Run Discord bot
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
