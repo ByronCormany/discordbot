@@ -153,6 +153,7 @@ async def on_ready():
     print(f'Logged in as {client.user}')
     print("Bot is ready and running!")  # Debugging line
 
+"""
 @client.event
 async def on_message(message):
     print(f"Received message: {message.content}")  # Debugging line
@@ -163,7 +164,7 @@ async def on_message(message):
     if clean_message.lower() == "hello":
         print("Squeak triggered")  # Debugging line
         await message.channel.send("Squeak")
-
+"""
 
 def get_first_row():
     try:
