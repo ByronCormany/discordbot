@@ -110,9 +110,9 @@ async def get_first(ctx):
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         print("author == client")
         return
 
