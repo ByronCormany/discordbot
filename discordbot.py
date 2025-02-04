@@ -11,7 +11,8 @@ app = Flask(__name__)
 
 intents = discord.Intents.default()  # Make sure the bot can read messages
 intents.messages = True  # Enable the "messages" intent
-bot = discord.Client(intents=intents)
+client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 """
 # Set up the Discord bot
@@ -147,16 +148,16 @@ if __name__ == "__main__":
 """
 
 # Set up the Discord bot event
-@bot.event
+@client.event
 async def on_ready():
-    print(f'Logged in as {bot.user}')
+    print(f'Logged in as {client.user}')
     print("Bot is ready and running!")  # Debugging line
 
-@bot.event
+@client.event
 async def on_message(message):
     print(f"Received message: {message.content}")  # Debugging line
     clean_message = message.content.replace("<@1336020067678158920> ", "")
-    if message.author == bot.user:
+    if message.author == client.user:
         return
 
     if clean_message.lower() == "hello":
@@ -206,4 +207,4 @@ def run_flask():
 # Start the Discord bot without Flask
 if __name__ == "__main__":
     print("Starting Discord bot only.")
-    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+    client.run(os.getenv("DISCORD_BOT_TOKEN"))
