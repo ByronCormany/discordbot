@@ -153,7 +153,7 @@ async def on_ready():
     print(f'Logged in as {client.user}')
     print("Bot is ready and running!")  # Debugging line
 
-"""
+
 @client.event
 async def on_message(message):
     print(f"Received message: {message.content}")  # Debugging line
@@ -162,9 +162,22 @@ async def on_message(message):
         return
 
     if clean_message.lower() == "hello":
-        print("Squeak triggered")  # Debugging line
-        await message.channel.send("Squeak")
-"""
+        print("triggered")  # Debugging line
+
+        row = get_first_row()
+
+        if row:
+            # Format the message with the first row's details
+            product_id, stock_status, price, url, last_updated, last_notified = row
+            mes = f"First Product in DB:\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
+        else:
+            mes = "Error retrieving data from the database."
+
+        # Send the message to the Discord channel
+        await message.channel.send(mes)
+        #print("Squeak triggered")  # Debugging line
+        #await message.channel.send("Squeak")
+
 
 def get_first_row():
     try:
@@ -188,6 +201,7 @@ def get_first_row():
     except Exception as e:
         return str(e)
 
+"""
 # Command to fetch the first row from the database
 @client.event
 async def get_first(message):
@@ -207,6 +221,7 @@ async def get_first(message):
 
         # Send the message to the Discord channel
         await message.channel.send(mes)
+"""
 
 def run_flask():
     print("Flask is not running right now.")  # Flask not used in this test
