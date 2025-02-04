@@ -283,7 +283,7 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
         cursor = connection.cursor()
 
         cursor.execute("""
-            UPDATE stock_table 
+            UPDATE stock_availability 
             SET last_notified = %s 
             WHERE product_id = %s;
         """, (datetime.utcnow(), product_id))
