@@ -121,6 +121,8 @@ async def on_message(message):
         print("trying to squeak")
         await message.channel.send("Squeak")
 
+    await bot.process_commands(message)
+
 def run_flask():
     print("run flask")
     app.run(host='0.0.0.0', port=5000)
