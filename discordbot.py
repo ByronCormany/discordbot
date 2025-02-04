@@ -161,7 +161,13 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if clean_message.lower() == "lilcho":
+        await message.channel.send("You'd wish the world you know to end!!!! >:)")
+
     if clean_message.lower() == "hello":
+        await message.channel.send("Squeak")
+
+    if clean_message.lower() == "getdata":
         print("triggered")  # Debugging line
 
         row = get_first_row()
