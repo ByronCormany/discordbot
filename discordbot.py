@@ -155,10 +155,11 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     print(f"Received message: {message.content}")  # Debugging line
+    clean_message = message.content.replace("<@1336020067678158920> ", "")
     if message.author == bot.user:
         return
 
-    if message.content.lower() == "hello":
+    if clean_message.lower() == "hello":
         print("Squeak triggered")  # Debugging line
         await message.channel.send("Squeak")
 
