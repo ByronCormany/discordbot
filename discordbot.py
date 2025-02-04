@@ -84,6 +84,9 @@ def get_first_row():
     except Exception as e:
         return str(e)
 
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong!")
 
 # Command to fetch the first row from the database
 @bot.command(name="getfirst")
