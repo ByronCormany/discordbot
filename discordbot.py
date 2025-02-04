@@ -164,6 +164,10 @@ async def on_message(message):
         print("Squeak triggered")  # Debugging line
         await message.channel.send("Squeak")
 
+    if clean_message.lower() == "getdata":
+        print("triggered")  # Debugging line
+        get_first()
+
 def get_first_row():
     try:
         # Connect to the database
@@ -188,7 +192,7 @@ def get_first_row():
 
 # Command to fetch the first row from the database
 @bot.command(name="getfirst")
-async def get_first(ctx):
+async def get_first():
     row = get_first_row()
 
     if row:
@@ -199,7 +203,7 @@ async def get_first(ctx):
         message = "Error retrieving data from the database."
 
     # Send the message to the Discord channel
-    await ctx.send(message)
+    await message.channel.send(message)
 
 def run_flask():
     print("Flask is not running right now.")  # Flask not used in this test
