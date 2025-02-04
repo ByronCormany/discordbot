@@ -2,7 +2,11 @@ import os
 import discord
 from discord.ext import commands, tasks
 from flask import Flask, request, jsonify
+from threading import Thread
 import psycopg2
+import asyncio
+import time
+from datetime import datetime
 
 # Initialize Flask app for receiving stock updates
 app = Flask(__name__)
@@ -146,12 +150,17 @@ if __name__ == "__main__":
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
     
 """
-
+DB_HOST = "pokemonstock.cx2iykw6mfl0.us-west-1.rds.amazonaws.com"
+DB_NAME = "postgres"
+DB_USER = "postgres"
+DB_PASS = "Pokepass123##"
+DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 # Set up the Discord bot event
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
     print("Bot is ready and running!")  # Debugging line
+    Thread(target=poll_database, daemon=True).start()
 
 
 @client.event
@@ -188,10 +197,6 @@ async def on_message(message):
 def get_first_row():
     try:
         # Connect to the database
-        DB_HOST = "pokemonstock.cx2iykw6mfl0.us-west-1.rds.amazonaws.com"
-        DB_NAME = "postgres"
-        DB_USER = "postgres"
-        DB_PASS = "Pokepass123##"
         conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cursor = conn.cursor()
 
@@ -206,6 +211,76 @@ def get_first_row():
         return row
     except Exception as e:
         return str(e)
+
+
+def get_latest_stock_data():
+    """Fetch all products and their last notified timestamps."""
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+        )
+        cursor = connection.cursor()
+
+        # Select products that have a different last_updated and last_notified
+        cursor.execute("""
+            SELECT product_id, stock_status, price, url, last_updated, last_notified
+            FROM stock_table
+            WHERE last_notified IS NULL OR last_updated > last_notified;
+        """)
+
+        rows = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+        return rows  # List of tuples with product details
+    except Exception as e:
+        print(f"❌ Database error: {e}")
+        return []
+
+def send_stock_update_to_discord(product_id, stock_status, price, url):
+    """Send a Discord notification."""
+    channel = bot.get_channel(int(DISCORD_CHANNEL_ID))
+    if not channel:
+        print("❌ Could not find Discord channel.")
+        return
+
+    # Format the message
+    message = f"**Product in Stock!**: {url} - Price: ${price}" if stock_status else f"**Product out of stock**: {url} - Price: ${price}"
+
+    # Use asyncio to send the message safely
+    asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
+
+    # Update last_notified timestamp in the database
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+        )
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE stock_table 
+            SET last_notified = %s 
+            WHERE product_id = %s;
+        """, (datetime.utcnow(), product_id))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"❌ Error updating last_notified timestamp: {e}")
+
+def poll_database():
+    """Continuously check for stock updates."""
+    while True:
+        print("🔍 Checking for stock changes...")
+        rows = get_latest_stock_data()
+
+        for row in rows:
+            product_id, stock_status, price, url, last_updated, last_notified = row
+            send_stock_update_to_discord(product_id, stock_status, price, url)
+
+        time.sleep(180)  # Check every 30 seconds
+
 
 """
 # Command to fetch the first row from the database
@@ -229,10 +304,5 @@ async def get_first(message):
         await message.channel.send(mes)
 """
 
-def run_flask():
-    print("Flask is not running right now.")  # Flask not used in this test
-
-# Start the Discord bot without Flask
 if __name__ == "__main__":
-    print("Starting Discord bot only.")
-    client.run(os.getenv("DISCORD_BOT_TOKEN"))
+    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
