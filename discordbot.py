@@ -163,6 +163,43 @@ async def on_message(message):
         print("Squeak triggered")  # Debugging line
         await message.channel.send("Squeak")
 
+def get_first_row():
+    try:
+        # Connect to the database
+        DB_HOST = "pokemonstock.cx2iykw6mfl0.us-west-1.rds.amazonaws.com"
+        DB_NAME = "postgres"
+        DB_USER = "postgres"
+        DB_PASS = "Pokepass123##"
+        conn = psycopg2.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+        cursor = conn.cursor()
+
+        # Execute the query to get the first row
+        cursor.execute("SELECT * FROM stock_availability LIMIT 1;")
+        row = cursor.fetchone()
+
+        # Close the connection
+        cursor.close()
+        conn.close()
+
+        return row
+    except Exception as e:
+        return str(e)
+
+# Command to fetch the first row from the database
+@bot.command(name="getfirst")
+async def get_first(ctx):
+    row = get_first_row()
+
+    if row:
+        # Format the message with the first row's details
+        product_id, stock_status, price, url, last_updated, last_notified = row
+        message = f"First Product in DB:\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
+    else:
+        message = "Error retrieving data from the database."
+
+    # Send the message to the Discord channel
+    await ctx.send(message)
+
 def run_flask():
     print("Flask is not running right now.")  # Flask not used in this test
 
