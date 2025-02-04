@@ -191,7 +191,7 @@ def get_first_row():
         return str(e)
 
 # Command to fetch the first row from the database
-@bot.command(name="getfirst")
+
 async def get_first():
     row = get_first_row()
 
