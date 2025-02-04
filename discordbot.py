@@ -9,8 +9,8 @@ app = Flask(__name__)
 
 # Set up the Discord bot
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
 intents.messages = True  # Ensure bot can read messages
+bot = commands.Bot(command_prefix="!", intents=intents)
 client = discord.Client(intents=intents)
 
 # Discord channel ID where the messages will be sent
