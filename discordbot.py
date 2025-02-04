@@ -112,6 +112,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    print(f"Received message: {message.content}")
     if message.author == bot.user:
         print("author == client")
         return
