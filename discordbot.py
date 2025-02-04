@@ -191,6 +191,7 @@ def get_first_row():
 # Command to fetch the first row from the database
 @client.event
 async def get_first(message):
+    print("triggered")
     clean_message = message.content.replace("<@1336020067678158920> ", "")
     if clean_message.lower() == "getdata":
         print("triggered")  # Debugging line
