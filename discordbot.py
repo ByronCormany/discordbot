@@ -249,7 +249,7 @@ def get_latest_stock_data():
         # Select products that have a different last_updated and last_notified
         cursor.execute("""
             SELECT product_id, stock_status, price, url, last_updated, last_notified
-            FROM stock_table
+            FROM stock_availability
             WHERE last_notified IS NULL OR last_updated > last_notified;
         """)
 
