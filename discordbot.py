@@ -168,8 +168,8 @@ async def on_message(message):
         print(row)
         if row:
             # Format the message with the first row's details
-            product_id, stock_status, price, url, last_updated, last_notified = row
-            mes = f"First Product in DB:\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
+            sid, product_id, stock_status, price, url, last_updated, last_notified = row
+            mes = f"First Product in DB:\nStorage ID: {sid}\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
         else:
             mes = "Error retrieving data from the database."
 
