@@ -7,6 +7,13 @@ import psycopg2
 # Initialize Flask app for receiving stock updates
 app = Flask(__name__)
 
+
+
+intents = discord.Intents.default()  # Make sure the bot can read messages
+intents.messages = True  # Enable the "messages" intent
+bot = discord.Client(intents=intents)
+
+"""
 # Set up the Discord bot
 intents = discord.Intents.default()
 intents.messages = True  # Ensure bot can read messages
@@ -16,7 +23,7 @@ client = discord.Client(intents=intents)
 # Discord channel ID where the messages will be sent
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 
-"""
+
 @app.route('/update_stock', methods=['POST'])
 def update_stock():
     # Get stock update data from the stock-checking program
@@ -103,7 +110,7 @@ async def get_first(ctx):
 
     # Send the message to the Discord channel
     await ctx.send(message)
-"""
+
 
 # Set up the Discord bot event
 @bot.event
@@ -135,4 +142,30 @@ if __name__ == "__main__":
     flask_thread.start()
     print("main")
     # Run Discord bot
+    bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+    
+"""
+
+# Set up the Discord bot event
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user}')
+    print("Bot is ready and running!")  # Debugging line
+
+@bot.event
+async def on_message(message):
+    print(f"Received message: {message.content}")  # Debugging line
+    if message.author == bot.user:
+        return
+
+    if message.content.lower() == "hello":
+        print("Squeak triggered")  # Debugging line
+        await message.channel.send("Squeak")
+
+def run_flask():
+    print("Flask is not running right now.")  # Flask not used in this test
+
+# Start the Discord bot without Flask
+if __name__ == "__main__":
+    print("Starting Discord bot only.")
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
