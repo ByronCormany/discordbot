@@ -150,12 +150,36 @@ if __name__ == "__main__":
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
     
 """
+
+"""
+# Command to fetch the first row from the database
+@client.event
+async def get_first(message):
+    print("triggered")
+    clean_message = message.content.replace("<@1336020067678158920> ", "")
+    if clean_message.lower() == "getdata":
+        print("triggered")  # Debugging line
+
+        row = get_first_row()
+
+        if row:
+            # Format the message with the first row's details
+            product_id, stock_status, price, url, last_updated, last_notified = row
+            mes = f"First Product in DB:\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
+        else:
+            mes = "Error retrieving data from the database."
+
+        # Send the message to the Discord channel
+        await message.channel.send(mes)
+"""
+
 DB_HOST = "pokemonstock.cx2iykw6mfl0.us-west-1.rds.amazonaws.com"
 DB_NAME = "postgres"
 DB_USER = "postgres"
 DB_PASS = "Pokepass123##"
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 # Set up the Discord bot event
+
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
@@ -279,30 +303,8 @@ def poll_database():
             product_id, stock_status, price, url, last_updated, last_notified = row
             send_stock_update_to_discord(product_id, stock_status, price, url)
 
-        time.sleep(180)  # Check every 30 seconds
+        time.sleep(30)  # Check every 30 seconds
 
-
-"""
-# Command to fetch the first row from the database
-@client.event
-async def get_first(message):
-    print("triggered")
-    clean_message = message.content.replace("<@1336020067678158920> ", "")
-    if clean_message.lower() == "getdata":
-        print("triggered")  # Debugging line
-
-        row = get_first_row()
-
-        if row:
-            # Format the message with the first row's details
-            product_id, stock_status, price, url, last_updated, last_notified = row
-            mes = f"First Product in DB:\nID: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
-        else:
-            mes = "Error retrieving data from the database."
-
-        # Send the message to the Discord channel
-        await message.channel.send(mes)
-"""
 
 if __name__ == "__main__":
     bot.run(os.getenv("DISCORD_BOT_TOKEN"))
