@@ -16,7 +16,7 @@ app = Flask(__name__)
 intents = discord.Intents.default()  # Make sure the bot can read messages
 intents.messages = True  # Enable the "messages" intent
 intents.message_content = True
-client = discord.Client(intents=intents)
+#client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 """
@@ -181,18 +181,18 @@ DB_PASS = "Pokepass123##"
 DISCORD_CHANNEL_ID = os.getenv("DISCORD_CHANNEL_ID")
 # Set up the Discord bot event
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
+    print(f'Logged in as {bot.user}')
     print("Bot is ready and running!")  # Debugging line
     Thread(target=poll_database, daemon=True).start()
 
 
-@client.event
+@bot.event
 async def on_message(message):
     print(f"Received message: {message.content}")  # Debugging line
     clean_message = message.content.replace("<@1336020067678158920> ", "")
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
     if clean_message.lower() == "lilcho":
