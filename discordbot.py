@@ -250,8 +250,12 @@ def get_latest_stock_data():
         cursor.execute("""
             SELECT product_id, stock_status, price, url, last_updated, last_notified
             FROM stock_availability
-            WHERE last_notified IS NULL OR last_updated > last_notified
-            AND stock_status IS DISTINCT FROM (SELECT stock_status FROM stock_availability WHERE product_id = stock_availability.product_id LIMIT 1);
+            WHERE last_notified IS NULL 
+            OR (last_updated > last_notified AND stock_status <> (
+                SELECT stock_status FROM stock_availability AS prev 
+                WHERE prev.product_id = stock_availability.product_id 
+                ORDER BY last_notified DESC LIMIT 1
+            ));
         """)
 
         rows = cursor.fetchall()
