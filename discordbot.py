@@ -374,7 +374,7 @@ def poll_database():
                     send_stock_update_to_discord(product_id, stock_status, price, url)
 
                     # Update last_notified timestamp in the database
-                    update_last_notified(product_id)
+                    update_last_notified('820650413186')
             else:
                 print("📭 No stock changes detected.")
 
