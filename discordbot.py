@@ -257,7 +257,12 @@ def get_latest_stock_data():
                 ORDER BY last_notified DESC LIMIT 1
             ));
         )
-
+            SELECT product_id, stock_status, price, url, last_updated, last_stock_status
+            FROM stock_availability
+            WHERE (last_stock_status IS NULL OR last_updated > last_notified)
+            AND stock_status IS DISTINCT FROM (
+                SELECT stock_status FROM stock_availability WHERE product_id = stock_availability.product_id LIMIT 1);
+                
         rows = cursor.fetchall()
         cursor.close()
         connection.close()
@@ -267,7 +272,25 @@ def get_latest_stock_data():
         print(f"❌ Database error: {e}")
         return []
 """
+def initialize_last_stock_status():
+    """Set last_stock_status to match stock_status at startup."""
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+        )
+        cursor = connection.cursor()
 
+        cursor.execute("""
+            UPDATE stock_availability
+            SET last_stock_status = stock_status
+            WHERE last_stock_status IS NULL;
+        """)
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"❌ Error initializing last_stock_status: {e}")
 def get_latest_stock_data():
     """Fetch products where stock status has changed since last notification."""
     try:
@@ -276,14 +299,14 @@ def get_latest_stock_data():
         )
         cursor = connection.cursor()
 
+        #last_stock_status
         # Select products where stock status changed compared to the last notification
         cursor.execute("""
-            SELECT product_id, stock_status, price, url, last_updated, last_notified
-            FROM stock_availability
-            WHERE (last_notified IS NULL OR last_updated > last_notified)
-            AND stock_status IS DISTINCT FROM (
-                SELECT stock_status FROM stock_availability WHERE product_id = stock_availability.product_id LIMIT 1);
-        """)
+                    SELECT product_id, stock_status, price, url, last_updated, last_stock_status
+                    FROM stock_availability
+                    WHERE last_stock_status IS DISTINCT FROM stock_status;
+                """)
+
 
         rows = cursor.fetchall()
 
@@ -294,11 +317,12 @@ def get_latest_stock_data():
         connection.close()
 
         return rows  # List of tuples with product details
+
     except Exception as e:
         print(f"❌ Database error: {e}")
         return []
 
-def update_last_notified(product_id):
+def update_last_stock_status(product_id):
     """Update last_notified timestamp after sending a Discord notification."""
     try:
         # Establish database connection
@@ -312,7 +336,7 @@ def update_last_notified(product_id):
         print(f"🔍 Attempting to update last_notified for product_id: {product_id} at {current_time}")
 
         # Check if the product_id exists in the table
-        cursor.execute("SELECT last_notified FROM stock_availability WHERE product_id = %s", (product_id,))
+        cursor.execute("SELECT last_stock_status FROM stock_availability WHERE product_id = %s", (product_id,))
         result = cursor.fetchone()
         print(result)
         if result is None:
@@ -323,9 +347,9 @@ def update_last_notified(product_id):
             # Update last_notified field
             cursor.execute("""
                 UPDATE stock_availability 
-                SET last_notified = %s 
+                SET last_stock_status = stock_status 
                 WHERE product_id = %s;
-            """, (current_time, product_id))
+            """, (product_id,))
 
             # Commit the transaction
             connection.commit()
@@ -347,16 +371,18 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
 
     # Format the message
     #f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
-    message = f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}"
+    message = f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'IN STOCK buy buy buy' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}"
 
     # Use asyncio to send the message safely
     asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
 
     # Update last_notified timestamp in the database
-    update_last_notified(product_id)
+    update_last_stock_status(product_id)
 
 def poll_database():
     """Continuously check for stock updates and notify if changes occur."""
+    initialize_last_stock_status()
+
     while True:
         try:
             print("🔍 Checking for stock changes...")
@@ -366,13 +392,13 @@ def poll_database():
                 print(f"✅ Found {len(rows)} stock updates.")
 
                 for row in rows:
-                    product_id, stock_status, price, url, last_updated, last_notified = row
+                    product_id, stock_status, price, url, last_updated, last_stock_status = row
                     product_id = product_id.strip()
                     # Send notification
                     send_stock_update_to_discord(product_id, stock_status, price, url)
 
                     # Update last_notified timestamp in the database
-                    update_last_notified('820650413186')
+                    update_last_stock_status(product_id)
             else:
                 print("📭 No stock changes detected.")
 
