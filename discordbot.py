@@ -278,13 +278,11 @@ def get_latest_stock_data():
 
         # Select products where stock status changed compared to the last notification
         cursor.execute("""
-            SELECT sa.product_id, sa.stock_status, sa.price, sa.url, sa.last_updated, sa.last_notified
-            FROM stock_availability sa
-            LEFT JOIN stock_availability prev 
-                ON sa.product_id = prev.product_id 
-                AND prev.last_notified IS NOT NULL
-            WHERE sa.last_notified IS NULL 
-               OR (sa.last_updated > sa.last_notified AND sa.stock_status <> prev.stock_status);
+            SELECT product_id, stock_status, price, url, last_updated, last_notified
+            FROM stock_availability
+            WHERE (last_notified IS NULL OR last_updated > last_notified)
+            AND stock_status IS DISTINCT FROM (
+                SELECT stock_status FROM stock_availability WHERE product_id = stock_availability.product_id LIMIT 1);
         """)
 
         rows = cursor.fetchall()
