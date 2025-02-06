@@ -271,7 +271,8 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
         return
 
     # Format the message
-    message = f"**Product in Stock!**: {url} - Price: ${price}" if stock_status else f"**Product out of stock**: {url} - Price: ${price}"
+    #f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
+    message = f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
 
     # Use asyncio to send the message safely
     asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
