@@ -237,7 +237,7 @@ def get_first_row():
     except Exception as e:
         return str(e)
 
-
+"""
 def get_latest_stock_data():
     """Fetch all products and their last notified timestamps."""
     try:
@@ -247,7 +247,7 @@ def get_latest_stock_data():
         cursor = connection.cursor()
 
         # Select products that have a different last_updated and last_notified
-        cursor.execute("""
+        cursor.execute(
             SELECT product_id, stock_status, price, url, last_updated, last_notified
             FROM stock_availability
             WHERE last_notified IS NULL 
@@ -256,7 +256,7 @@ def get_latest_stock_data():
                 WHERE prev.product_id = stock_availability.product_id 
                 ORDER BY last_notified DESC LIMIT 1
             ));
-        """)
+        )
 
         rows = cursor.fetchall()
         cursor.close()
@@ -266,6 +266,61 @@ def get_latest_stock_data():
     except Exception as e:
         print(f"❌ Database error: {e}")
         return []
+"""
+
+def get_latest_stock_data():
+    """Fetch products where stock status has changed since last notification."""
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+        )
+        cursor = connection.cursor()
+
+        # Select products where stock status changed compared to the last notification
+        cursor.execute("""
+            SELECT sa.product_id, sa.stock_status, sa.price, sa.url, sa.last_updated, sa.last_notified
+            FROM stock_availability sa
+            LEFT JOIN stock_availability prev 
+                ON sa.product_id = prev.product_id 
+                AND prev.last_notified IS NOT NULL
+            WHERE sa.last_notified IS NULL 
+               OR (sa.last_updated > sa.last_notified AND sa.stock_status <> prev.stock_status);
+        """)
+
+        rows = cursor.fetchall()
+
+        # Debugging: Print fetched rows
+        print(f"🔍 Found {len(rows)} stock updates that require notification.")
+
+        cursor.close()
+        connection.close()
+
+        return rows  # List of tuples with product details
+    except Exception as e:
+        print(f"❌ Database error: {e}")
+        return []
+
+def update_last_notified(product_id):
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
+        )
+        cursor = connection.cursor()
+
+        current_time = datetime.utcnow()
+        cursor.execute("""
+            UPDATE stock_availability 
+            SET last_notified = %s 
+            WHERE product_id = %s;
+        """, (current_time, product_id))
+
+        print(f"✅ Updated last_notified for {product_id} at {current_time}")
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        print(f"❌ Error updating last_notified timestamp: {e}")
 
 def send_stock_update_to_discord(product_id, stock_status, price, url):
     """Send a Discord notification."""
@@ -282,23 +337,7 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
     asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
 
     # Update last_notified timestamp in the database
-    try:
-        connection = psycopg2.connect(
-            host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
-        )
-        cursor = connection.cursor()
-
-        cursor.execute("""
-            UPDATE stock_availability 
-            SET last_notified = %s 
-            WHERE product_id = %s;
-        """, (datetime.utcnow(), product_id))
-
-        connection.commit()
-        cursor.close()
-        connection.close()
-    except Exception as e:
-        print(f"❌ Error updating last_notified timestamp: {e}")
+    update_last_notified(product_id)
 
 def poll_database():
     """Continuously check for stock updates."""
