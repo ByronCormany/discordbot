@@ -239,7 +239,7 @@ def get_first_row():
 
 """
 def get_latest_stock_data():
-    """Fetch all products and their last notified timestamps."""
+    Fetch all products and their last notified timestamps.
     try:
         connection = psycopg2.connect(
             host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
