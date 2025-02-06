@@ -285,7 +285,7 @@ def get_latest_stock_data():
                 AND prev.last_notified IS NOT NULL
             WHERE sa.last_notified IS NULL 
                OR (sa.last_updated > sa.last_notified AND sa.stock_status <> prev.stock_status);
-        """)
+        """, (product_id,))
 
         rows = cursor.fetchall()
 
@@ -369,7 +369,7 @@ def poll_database():
 
                 for row in rows:
                     product_id, stock_status, price, url, last_updated, last_notified = row
-
+                    product_id = product_id.strip()
                     # Send notification
                     send_stock_update_to_discord(product_id, stock_status, price, url)
 
