@@ -303,6 +303,7 @@ def get_latest_stock_data():
 def update_last_notified(product_id):
     """Update last_notified timestamp after sending a Discord notification."""
     try:
+        # Establish database connection
         connection = psycopg2.connect(
             host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
         )
@@ -310,26 +311,31 @@ def update_last_notified(product_id):
 
         # Get current UTC time
         current_time = datetime.utcnow()
+        print(f"🔍 Attempting to update last_notified for product_id: {product_id} at {current_time}")
 
-        # Debugging: Check if product exists
-        cursor.execute("SELECT 1 FROM stock_availability WHERE product_id = %s", (product_id,))
-        exists = cursor.fetchone()
-        if not exists:
-            print(f"❌ No matching product found for ID: {product_id}")
-            return
+        # Check if the product_id exists in the table
+        cursor.execute("SELECT last_notified FROM stock_availability WHERE product_id = %s", (product_id,))
+        result = cursor.fetchone()
 
-        # Update the last_notified field
-        cursor.execute("""
-            UPDATE stock_availability 
-            SET last_notified = %s 
-            WHERE product_id = %s;
-        """, (current_time, product_id))
+        if result is None:
+            print(f"❌ No matching product found for product_id: {product_id}")
+        else:
+            print(f"✅ Product found! Previous last_notified: {result[0]}")
 
-        connection.commit()
+            # Update last_notified field
+            cursor.execute("""
+                UPDATE stock_availability 
+                SET last_notified = %s 
+                WHERE product_id = %s;
+            """, (current_time, product_id))
+
+            # Commit the transaction
+            connection.commit()
+            print(f"✅ Successfully updated last_notified for product_id: {product_id} at {current_time}")
+
+        # Close database connection
         cursor.close()
         connection.close()
-
-        print(f"✅ Updated last_notified for product {product_id} at {current_time}")
 
     except Exception as e:
         print(f"❌ Error updating last_notified timestamp: {e}")
