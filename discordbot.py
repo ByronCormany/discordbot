@@ -301,24 +301,36 @@ def get_latest_stock_data():
         return []
 
 def update_last_notified(product_id):
+    """Update last_notified timestamp after sending a Discord notification."""
     try:
         connection = psycopg2.connect(
             host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS
         )
         cursor = connection.cursor()
 
+        # Get current UTC time
         current_time = datetime.utcnow()
+
+        # Debugging: Check if product exists
+        cursor.execute("SELECT 1 FROM stock_availability WHERE product_id = %s", (product_id,))
+        exists = cursor.fetchone()
+        if not exists:
+            print(f"❌ No matching product found for ID: {product_id}")
+            return
+
+        # Update the last_notified field
         cursor.execute("""
             UPDATE stock_availability 
             SET last_notified = %s 
             WHERE product_id = %s;
         """, (current_time, product_id))
 
-        print(f"✅ Updated last_notified for {product_id} at {current_time}")
-
         connection.commit()
         cursor.close()
         connection.close()
+
+        print(f"✅ Updated last_notified for product {product_id} at {current_time}")
+
     except Exception as e:
         print(f"❌ Error updating last_notified timestamp: {e}")
 
@@ -340,16 +352,30 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
     update_last_notified(product_id)
 
 def poll_database():
-    """Continuously check for stock updates."""
+    """Continuously check for stock updates and notify if changes occur."""
     while True:
-        print("🔍 Checking for stock changes...")
-        rows = get_latest_stock_data()
+        try:
+            print("🔍 Checking for stock changes...")
+            rows = get_latest_stock_data()
 
-        for row in rows:
-            product_id, stock_status, price, url, last_updated, last_notified = row
-            send_stock_update_to_discord(product_id, stock_status, price, url)
+            if rows:
+                print(f"✅ Found {len(rows)} stock updates.")
 
-        time.sleep(30)  # Check every 30 seconds
+                for row in rows:
+                    product_id, stock_status, price, url, last_updated, last_notified = row
+
+                    # Send notification
+                    send_stock_update_to_discord(product_id, stock_status, price, url)
+
+                    # Update last_notified timestamp in the database
+                    update_last_notified(product_id)
+            else:
+                print("📭 No stock changes detected.")
+
+        except Exception as e:
+            print(f"❌ Error polling database: {e}")
+
+        time.sleep(30)  # Wait 30 seconds before checking again
 
 
 if __name__ == "__main__":
