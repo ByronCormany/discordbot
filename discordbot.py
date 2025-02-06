@@ -285,7 +285,7 @@ def get_latest_stock_data():
                 AND prev.last_notified IS NOT NULL
             WHERE sa.last_notified IS NULL 
                OR (sa.last_updated > sa.last_notified AND sa.stock_status <> prev.stock_status);
-        """, (product_id,))
+        """)
 
         rows = cursor.fetchall()
 
@@ -363,7 +363,7 @@ def poll_database():
         try:
             print("🔍 Checking for stock changes...")
             rows = get_latest_stock_data()
-
+            print(rows)
             if rows:
                 print(f"✅ Found {len(rows)} stock updates.")
 
