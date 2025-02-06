@@ -316,7 +316,7 @@ def update_last_notified(product_id):
         # Check if the product_id exists in the table
         cursor.execute("SELECT last_notified FROM stock_availability WHERE product_id = %s", (product_id,))
         result = cursor.fetchone()
-
+        print(result)
         if result is None:
             print(f"❌ No matching product found for product_id: {product_id}")
         else:
