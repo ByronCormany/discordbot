@@ -371,10 +371,12 @@ def send_stock_update_to_discord(product_id, stock_status, price, url):
 
     # Format the message
     #f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'In stock' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}\nLast Updated: {last_updated}"
-    message = f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'IN STOCK buy buy buy' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}"
-
-    # Use asyncio to send the message safely
-    asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
+    #only prints if the item is in stock
+    if stock_status:
+        message = f"Product Stock Update!\nUPC: {product_id}\nStock Status: {'IN STOCK buy buy buy' if stock_status else 'Out of stock'}\nPrice: ${price}\nURL: {url}"
+        asyncio.run_coroutine_threadsafe(channel.send(message), bot.loop)
+    else:
+        pass
 
     # Update last_notified timestamp in the database
     update_last_stock_status(product_id)
@@ -405,7 +407,7 @@ def poll_database():
         except Exception as e:
             print(f"❌ Error polling database: {e}")
 
-        time.sleep(30)  # Wait 30 seconds before checking again
+        time.sleep(240)  # Wait 30 seconds before checking again
 
 
 if __name__ == "__main__":
